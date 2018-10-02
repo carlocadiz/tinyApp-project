@@ -11,6 +11,12 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function generateRandomString() {
+  let randomURL = "";
+  randomURL = Math.random().toString(36).substring(2,8);
+  return randomURL
+}
+
 //console.log(urlDatabase."b2Vn2");
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
