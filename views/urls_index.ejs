@@ -12,9 +12,10 @@
 
 <ul>
     <% for (var url in urls) { %>
-        <li><%= url %></li>
+        <li><%= `${url}  ${urls[url]} ` %></li>
     <% }; %>
 </ul>
+<p><a href="#">SHORTEN NEW URL</a></p>
 
 </body>
 </html>
