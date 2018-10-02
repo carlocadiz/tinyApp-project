@@ -9,8 +9,18 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//console.log(urlDatabase."b2Vn2");
+
+app.get("/urls/:id", (req, res) => {
+  var index = req.params.id
+  let templateVars = { shortURL : req.params.id,
+                       longURL : urlDatabase[req.params.id]};
+
+  res.render("urls_show", templateVars);
+});
+
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { urls : urlDatabase };
   res.render("urls_index", templateVars);
 });
 
