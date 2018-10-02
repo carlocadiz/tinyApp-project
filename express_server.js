@@ -14,6 +14,7 @@ var urlDatabase = {
 function generateRandomString() {
   let randomURL = "";
   randomURL = Math.random().toString(36).substring(2,8);
+ // console.log(randomURL);
   return randomURL
 }
 
@@ -24,16 +25,24 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let randomURL = generateRandomString();
+  urlDatabase[randomURL] = req.body.longURL;   // Respond with 'Ok' (we will replace this)
+  res.redirect("http://localhost:8080/urls/" + randomURL);
 });
+
 
 app.get("/urls/:id", (req, res) => {
   var index = req.params.id
   let templateVars = { shortURL : req.params.id,
                        longURL : urlDatabase[req.params.id]};
-
   res.render("urls_show", templateVars);
 });
+
+app.get("/u/:shortURL", (req, res) => {
+  // let longURL = ...
+  res.redirect(longURL);
+});
+
 
 app.get("/urls", (req, res) => {
   let templateVars = { urls : urlDatabase };
