@@ -8,6 +8,7 @@ var cookieParser = require('cookie-parser')
 app.use(cookieParser())
 
 
+
 app.set("view engine", "ejs");
 
 var urlDatabase = {
@@ -17,8 +18,7 @@ var urlDatabase = {
 
 function generateRandomString() {
   let randomURL = "";
-  randomURL = Math.random().toString(36).substring(2,8);
- // console.log(randomURL);
+  randomURL = Math.random().toString(36).substring(2,8); // console.log(randomURL);
   return randomURL
 }
 
@@ -30,14 +30,15 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-//console.log(urlDatabase."b2Vn2");
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { username : req.signedCookies.username};
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {  console.log(req.params.id);
   let templateVars = { shortURL : req.params.id,
-                       longURL : urlDatabase[req.params.id]};
+                       longURL :  urlDatabase[req.params.id],
+                       username : req.signedCookies.username};
   res.render("urls_show", templateVars);
 });
 
@@ -50,7 +51,8 @@ app.post("/urls/:id", (req, res) => {
 
 //Prints out the complete list of URLs
 app.get("/urls", (req, res) => {
-  let templateVars = { urls : urlDatabase };
+  let templateVars = { urls : urlDatabase ,
+                       username : req.signedCookies.username};
   res.render("urls_index", templateVars);
 });
 
