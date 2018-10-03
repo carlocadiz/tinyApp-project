@@ -23,13 +23,17 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/urls", (req, res) => {
+  let templateVars = { urls : urlDatabase };
+  res.render("urls_index", templateVars);
+});
+
 app.post("/urls", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
   let randomURL = generateRandomString();
   urlDatabase[randomURL] = req.body.longURL;   // Respond with 'Ok' (we will replace this)
   res.redirect("http://localhost:8080/urls/" + randomURL);
 });
-
 
 app.get("/urls/:id", (req, res) => {
   //var index = req.params.id
@@ -43,11 +47,6 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-
-app.get("/urls", (req, res) => {
-  let templateVars = { urls : urlDatabase };
-  res.render("urls_index", templateVars);
-});
 
 app.get("/", (req, res) => {
   res.send("Hello!");

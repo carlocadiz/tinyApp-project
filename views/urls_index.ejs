@@ -7,15 +7,14 @@
     <% include ./partials/_header %>
 </header>
 <body>
-    <!-- Add your EJS code here -->
 
 
 <ul>
     <% for (var url in urls) { %>
-        <li><%= `${url}  ${urls[url]} ` %></li>
+        <li><%= `${url} ---> ${urls[url]} ` %></li>
     <% }; %>
 </ul>
-<p><a href="#">SHORTEN NEW URL</a></p>
-
+<!--<p><a href="#">SHORTEN NEW URL</a></p>-->
+<button type="button">SHORTEN NEW URL </style></button>
 </body>
 </html>
