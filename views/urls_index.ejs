@@ -11,10 +11,12 @@
 
 <ul>
     <% for (var url in urls) { %>
-        <li><%= `${url} ---> ${urls[url]} ` %></li>
+        <form method="POST" action="/urls/<%=url%>/delete"><button type="submit">DELETE! </button></form>
+        <li><%= `${url} ---> ${urls[url]} ` %> </li>
     <% }; %>
 </ul>
 <!--<p><a href="#">SHORTEN NEW URL</a></p>-->
-<button type="button">SHORTEN NEW URL </style></button>
+<form method="GET" action= "/urls/new" >
+<button type="submit" >SHORTEN NEW URL</button></form>
 </body>
 </html>

@@ -35,6 +35,12 @@ app.post("/urls", (req, res) => {
   res.redirect("http://localhost:8080/urls/" + randomURL);
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  //console.log(req.params.id);
+  delete urlDatabase[req.params.id];//let longURL = urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
+
 app.get("/urls/:id", (req, res) => {
   //var index = req.params.id
   let templateVars = { shortURL : req.params.id,
