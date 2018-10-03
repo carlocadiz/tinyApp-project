@@ -4,6 +4,10 @@ var PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+var cookieParser = require('cookie-parser')
+app.use(cookieParser())
+
+
 app.set("view engine", "ejs");
 
 var urlDatabase = {
@@ -17,6 +21,14 @@ function generateRandomString() {
  // console.log(randomURL);
   return randomURL
 }
+
+app.post("/login", (req, res) => {
+
+  console.log(req.body.username);
+  let cookies = req.body.username;
+  res.cookie("username",cookies);
+  res.redirect("/urls");
+});
 
 //console.log(urlDatabase."b2Vn2");
 app.get("/urls/new", (req, res) => {
