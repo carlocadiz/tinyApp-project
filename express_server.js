@@ -23,30 +23,47 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/urls/:id", (req, res) => {  console.log(req.params.id);
+  let templateVars = { shortURL : req.params.id,
+                       longURL : urlDatabase[req.params.id]};
+  res.render("urls_show", templateVars);
+});
+
+//update an URL
+app.post("/urls/:id", (req, res) => {
+ // console.log(req.params.id)
+  urlDatabase[req.params.id] = req.body.longURL;//let longURL = urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
+
+//Prints out the complete list of URLs
 app.get("/urls", (req, res) => {
   let templateVars = { urls : urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+//Creates a new random short URL
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
+//  console.log(req.body);  // debug statement to see POST parameters
   let randomURL = generateRandomString();
   urlDatabase[randomURL] = req.body.longURL;   // Respond with 'Ok' (we will replace this)
   res.redirect("http://localhost:8080/urls/" + randomURL);
 });
 
-app.post("/urls/:id/delete", (req, res) => {
-  //console.log(req.params.id);
+//Deletes a short and long URL
+app.post("/urls/:id/delete", (req, res) => {  //console.log(req.params.id);
   delete urlDatabase[req.params.id];//let longURL = urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 });
 
-app.get("/urls/:id", (req, res) => {
-  //var index = req.params.id
-  let templateVars = { shortURL : req.params.id,
-                       longURL : urlDatabase[req.params.id]};
-  res.render("urls_show", templateVars);
+
+app.post("/urls/:id", (req, res) => {  //console.log(req.params.id);
+//  console.log(req.params.id)
+  urlDatabase[req.params.id] = req.body.longURL;//let longURL = urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
 });
+
+
 
 app.get("/u/:shortURL", (req, res) => {
    let longURL = urlDatabase[req.params.shortURL];

@@ -9,13 +9,14 @@
 <body>
     <!-- Add your EJS code here -->
 
-<ul>
+  <p><%= `Short URL : ${shortURL}` %></p>
+  <p><%= `Long URL  : ${longURL}` %></p>
 
-        <li><%=` ${shortURL}  -->    ${longURL}`%></li>
+  <form method="POST" action="/urls/<%=shortURL%>">
+    <label for="longURL">Enter a URL:</label>
+    <input id="longURL" type="text" name="longURL" placeholder= "<%=longURL%>"" style="width: 300px">
+    <input type="submit" value="Update">
 
-
-</ul>
-</ul>
 
 </body>
 </html>
