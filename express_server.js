@@ -24,21 +24,25 @@ function generateRandomString() {
 
 app.post("/login", (req, res) => {
 
-  console.log(req.body.username);
+  //console.log(req.body.username);
   let cookies = req.body.username;
   res.cookie("username",cookies);
+ // console.log(req.cookies.username);
+//  console.log(res.cookie.username);
+
   res.redirect("/urls");
 });
 
 app.get("/urls/new", (req, res) => {
-  let templateVars = { username : req.signedCookies.username};
+ // console.log(req.signedCookies.username);
+  let templateVars = { username : req.cookies.username};
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {  console.log(req.params.id);
   let templateVars = { shortURL : req.params.id,
                        longURL :  urlDatabase[req.params.id],
-                       username : req.signedCookies.username};
+                       username : req.cookies.username};
   res.render("urls_show", templateVars);
 });
 
@@ -52,7 +56,7 @@ app.post("/urls/:id", (req, res) => {
 //Prints out the complete list of URLs
 app.get("/urls", (req, res) => {
   let templateVars = { urls : urlDatabase ,
-                       username : req.signedCookies.username};
+                       username : req.cookies.username};
   res.render("urls_index", templateVars);
 });
 
