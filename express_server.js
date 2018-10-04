@@ -24,12 +24,18 @@ function generateRandomString() {
 
 app.post("/login", (req, res) => {
 
-  //console.log(req.body.username);
   let cookies = req.body.username;
   res.cookie("username",cookies);
- // console.log(req.cookies.username);
-//  console.log(res.cookie.username);
+  res.redirect("/urls");
+});
 
+app.post("/logout", (req, res) => {
+
+  //let cookies = req.body.username;
+ // console.log(req.cookies.username);
+  res.clearCookie("username");
+ // console.log(req.cookies.username);
+//  res.cookie("username",cookies);
   res.redirect("/urls");
 });
 
