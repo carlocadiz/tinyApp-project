@@ -3,25 +3,25 @@
 <head>
   <title>TinyApp</title>
 </head>
+
 <header>
     <% include ./partials/_header %>
 </header>
+
 <body>
 
-
-<ul>
     <% for (var url in urls) { %>
+    <center> <h3><%= `${url} ---> ${urls[url]} ` %> </h3></center>
 
-        <li><%= `${url} ---> ${urls[url]} ` %> </li>
-
-        <form method="POST" action="/urls/<%=url%>/delete">
-        <a href="/urls/<%= url %>">EDIT</a>
-        <button type="submit">DELETE! </button></form>
-
+     <div style= "display:inline";><form action="/urls/<%= url %>">
+    <center> <button type="submit">EDIT</button></form></center>
+     <form method="POST" action="/urls/<%=url%>/delete">
+    <center> <button type="submit">DELETE </button></form></div></center>
     <% }; %>
-</ul>
+
 <!--<p><a href="#">SHORTEN NEW URL</a></p>-->
+<P>&nbsp;<P>
 <form method="GET" action= "/urls/new" >
-<button type="submit" >SHORTEN NEW URL</button></form>
+<center><button type="submit" >SHORTEN NEW URL</button></form></center>
 </body>
 </html>
