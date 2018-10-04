@@ -4,23 +4,17 @@
     <div class="navbar-header">
         <h1>
                                         <center>TinyApp</center>
-        </h1>
-        <% if( username ){ %>
-         <form action="/logout" method= "POST">
-         <input type="text" name="username" placeholder="<%= username %>" style="width: 150px">
-         <input type="submit" value="Logout">
-         </form>
 
-        <% } else{ %>
+<a href ="/login"> Login</a>  <a href ="/register"> Register </a>
 
-         <form action="/login" method= "POST">
-         <input type="text" name="username" placeholder="Username" style="width: 150px">
-         <input type="submit" value="Login">
-         </form>
-
+         <% if(currentUser !== null){ %>
+           <form action="/logout" method= "POST">
+           <input  placeholder= "<%= currentUser.user.email %>"" style="width: 150px">
+           <input type="submit" value="Logout">
+           </form>
+         <% } else{ %>
+           <p> No user currently logged in</p>
         <% } %>
-
-
         <ul class="nav navbar-nav">
             <li><a href="/">Home</a></li>
             <li><a href="/urls">LIST of URLs</a></li>
