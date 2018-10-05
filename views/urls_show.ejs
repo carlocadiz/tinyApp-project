@@ -7,10 +7,9 @@
     <% include ./partials/_header %>
 </header>
 <body>
-    <!-- Add your EJS code here -->
 
   <center><h2><%= `Short URL : ${shortURL}` %></h2></center>
-  <center>><h2><%= `Long URL  : ${longURL}` %></h2></center>
+  <center><h2><%= `Long URL  : ${longURL}` %></h2></center>
 
   <form method="POST" action="/urls/<%=shortURL%>">
    <center><label for="longURL">Enter updated URL:</label>

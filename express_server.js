@@ -21,15 +21,34 @@ const users = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
+  },
+  "11111" : {
+    id: "11111",
+    email: "carlocadiz@yahoo.com",
+    password: "111"
   }
 }
 
  currentUser = {};
-
+/*
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+ "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com",
+  "111111" : "http//wwww/this.is.me"
 };
+/*
+var urlDatabase = {
+                   "userRandomID" :  [{ "short" : "b2xVn2"  , "long" : "www.lighthouselabs.ca"},
+                                     { "short" : "9sm5xK"  , "long" : "http://www.google.com"}],
+                   "user2RandomID" : [{ "short" : "111111"  , "long" : "http//www.reddit.com"}]
+
+                }
+*/
+var urlDatabase = {
+                   "b2Vn2"  : { "long" : "htttp://www.lighthouselabs.ca", "user_id" : "userRandomID"},
+                   "9sm5xK" : { "long" : "http://www.google.com", "user_id" : "userRandomID"},
+                   "111111" : { "long" : "http://www.reddit.com", "user_id" : "11111"}
+}
 
 function generateRandomString() {
   let randomURL = "";
@@ -37,6 +56,23 @@ function generateRandomString() {
   return randomURL
 }
 
+function urlsForUser(userID){
+  var urlList = {};
+  //console.log(userID);
+
+  for (let element in urlDatabase){
+    console.log(element);
+    if (urlDatabase[element].user_id === userID){
+      urlList[element] = {"long" : urlDatabase[element].long,
+                          "user_id": urlDatabase[element].long}
+     }
+   }
+   return urlList;
+}
+
+
+
+// Login
 app.post("/login", (req, res) => {
   let emailExist = false;
   let passwordExist =false;
@@ -53,72 +89,17 @@ app.post("/login", (req, res) => {
   if (!emailExist || !passwordExist){
     res.send("ERROR: 403");
   }
- // emailExist = false;
- // passwordExist = false;
-  res.redirect("/");
+  res.redirect("/urls");
 });
 
+// logout
 app.post("/logout", (req, res) => {
 
-  res.clearCookie("user-id");
+  res.clearCookie("user_id");
   currentUser = {};
   res.redirect("/login");
 });
 
-app.get("/urls/new", (req, res) => {
- // console.log(req.signedCookies.username);
-  let templateVars = { username : req.cookies.username};
-  res.render("urls_new", templateVars);
-});
-
-app.get("/urls/:id", (req, res) => {  console.log(req.params.id);
-  let templateVars = { shortURL : req.params.id,
-                       longURL :  urlDatabase[req.params.id],
-                       username : req.cookies.username};
-  res.render("urls_show", templateVars);
-});
-
-//update an URL
-app.post("/urls/:id", (req, res) => {
- // console.log(req.params.id)
-  urlDatabase[req.params.id] = req.body.longURL;//let longURL = urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
-});
-
-//Prints out the complete list of URLs
-app.get("/urls", (req, res) => {
-  let templateVars = { urls : urlDatabase ,
-                       currentUser};
-  res.render("urls_index", templateVars);
-});
-
-//Creates a new random short URL
-app.post("/urls", (req, res) => {
-//  console.log(req.body);  // debug statement to see POST parameters
-  let randomURL = generateRandomString();
-  urlDatabase[randomURL] = req.body.longURL;   // Respond with 'Ok' (we will replace this)
-  res.redirect("http://localhost:8080/urls/" + randomURL);
-});
-
-//Deletes a short and long URL
-app.post("/urls/:id/delete", (req, res) => {  //console.log(req.params.id);
-  delete urlDatabase[req.params.id];//let longURL = urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
-});
-
-
-app.post("/urls/:id", (req, res) => {  //console.log(req.params.id);
-//  console.log(req.params.id)
-  urlDatabase[req.params.id] = req.body.longURL;//let longURL = urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
-});
-
-
-
-app.get("/u/:shortURL", (req, res) => {
-   let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
-});
 
 app.post("/register", (req, res) => {
   let password = req.body.password;
@@ -140,8 +121,6 @@ app.post("/register", (req, res) => {
                            "password" : password};
     res.cookie("user_id", randomUserID);
     currentUser["user"] = users[randomUserID];
-  //  console.log(currentUser);
-
  } else {
     res.send("400 Error - EMAIL EXIST");
  }
@@ -150,19 +129,94 @@ app.post("/register", (req, res) => {
 });
 
 
-app.get("/register", (req, res) => {
+// opens new url to logged users
+app.get("/urls/new", (req, res) => {
 
+  let templateVars = { currentUser};
+  if (req.cookies.user_id) {
+  res.render("urls_new", templateVars);
+  } else {
+      res.redirect("/login");
+  }
+});
+//Creates a new random short URL
+app.post("/urls", (req, res) => {
+  let randomURL = generateRandomString();
+  urlDatabase[randomURL] = { "long" : req.body.longURL ,
+                             "user_id" : req.cookies.user_id};
+  console.log(urlDatabase);
+  //res.redirect("http://localhost:8080/urls/" + randomURL);
+  res.redirect("/urls");
+});
+
+
+
+// Show updated URL screen
+app.get("/urls/:id", (req, res) => {
+  let templateVars = { shortURL : req.params.id,
+                       longURL :  urlDatabase[req.params.id].long,
+                       username : req.cookies.user_id};
+  res.render("urls_show", templateVars);
+});
+
+//updates an URL
+app.post("/urls/:id", (req, res) => {
+
+ if (req.cookies.user_id) {
+   urlDatabase[req.params.id].long = req.body.longURL;
+   console.log(urlDatabase[req.params.id]);
+   console.log(req.body.longURL);
+ }
+   res.redirect("/urls");
+});
+
+//Prints out the complete list of URLs
+app.get("/urls", (req, res) => {
+  let templateVars = { urls : urlsForUser(req.cookies.user_id),
+                       currentUser};
+  console.log(templateVars)
+  res.render("urls_index", templateVars);
+});
+
+
+//Deletes a short and long URL
+app.post("/urls/:id/delete", (req, res) => {
+  if (req.cookies.user_id) {
+    console.log("ready to delete" , req.params.id);
+    console.log(urlDatabase[req.params.id]);
+    delete urlDatabase[req.params.id];
+  } else {
+  res.redirect("/login");
+  }
+  res.redirect("/urls");
+});
+
+
+app.post("/urls/:id", (req, res) => {  //console.log(req.params.id);
+  urlDatabase[req.params.id] = req.body.longURL;//let longURL = urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
+
+
+app.get("/u/:shortURL", (req, res) => {
+   let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+});
+
+
+
+
+app.get("/register", (req, res) => {
   res.render("register");
 });
 
 app.get("/login", (req, res) => {
-
   res.render("login");
 });
 
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.send("Hello. Welcome to TinyApp");
 });
 
 app.get("/urls.json", (req, res) => {

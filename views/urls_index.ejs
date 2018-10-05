@@ -11,7 +11,7 @@
 <body>
 
     <% for (var url in urls) { %>
-    <center> <h3><%= `${url} ---> ${urls[url]} ` %> </h3></center>
+    <center> <h3><%= `${url} ---> ${urls[url].long} ` %> </h3></center>
 
      <div style= "display:inline";><form action="/urls/<%= url %>">
     <center> <button type="submit">EDIT</button></form></center>
