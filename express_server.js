@@ -67,13 +67,31 @@ function urlsForUser(userID){
   //console.log(userID);
 
   for (let element in urlDatabase){
-    console.log(element);
+  //  console.log(element);
     if (urlDatabase[element].user_id === userID){
       urlList[element] = {"long" : urlDatabase[element].long,
                           "user_id": urlDatabase[element].long}
      }
    }
-   return urlList;
+     return urlList;
+}
+
+function urlExist(shortURL){
+    for (let element in urlDatabase){
+      if (shortURL === element){
+        return true;
+      }
+    }
+   return false;
+  }
+
+function urlDifferentUser(shortURL, userID){
+  for (let element in urlDatabase){
+      if (shortURL === element && urlDatabase[element].user_id !== userID){
+        return true;
+      }
+    }
+   return false;
 }
 
 
@@ -82,21 +100,49 @@ function urlsForUser(userID){
 app.post("/login", (req, res) => {
   let emailExist = false;
   let passwordExist =false;
-  for (let element in users){
-    if (users[element].email === req.body.email){
-      emailExist = true;
+  console.log(req.session.user_id);
+  /*
+  if (!req.session.isPopulated){
+    for (let element in users){
+      if (users[element].email === req.body.email){
+        emailExist = true;
      // if (users[element].password === req.body.password){
-      if (bcrypt.compareSync(req.body.password, users[element].password)){
-        passwordExist = true;
-        req.session.user_id = users[element].id;
-        currentUser["user"] = users[element];
+        if (bcrypt.compareSync(req.body.password, users[element].password)){
+          passwordExist = true;
+          req.session.user_id = users[element].id;
+          currentUser["user"] = users[element];
+        }
       }
     }
+    if (!emailExist || !passwordExist){
+      res.send("ERROR: 403");
+    }
+  } else {
+      res.redirect("/urls");
+    };
+ */
+ if (req.session.isPopulated){
+   res.redirect("/urls");
   }
-  if (!emailExist || !passwordExist){
-    res.send("ERROR: 403");
-  }
-  res.redirect("/urls");
+
+    for (let element in users){
+      if (users[element].email === req.body.email){
+        emailExist = true;
+     // if (users[element].password === req.body.password){
+
+        if (bcrypt.compareSync(req.body.password, users[element].password)){
+          passwordExist = true;
+          req.session.user_id = users[element].id;
+          currentUser["user"] = users[element];
+        }
+      }
+    }
+    if (!emailExist || !passwordExist){
+      res.send("ERROR: 403");
+    } else {
+      res.redirect("/urls");
+    }
+
 });
 
 // logout
@@ -112,7 +158,7 @@ app.post("/register", (req, res) => {
   let password = req.body.password;
   let email = req.body.email;
   let exist = false;
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  let hashedPassword = bcrypt.hashSync(password, 10);
 
   if (password === "" || email === ""){
     res.send("400 Error - MISSING EMAIL OR PASSWORD");
@@ -131,9 +177,9 @@ app.post("/register", (req, res) => {
    // res.cookie("user_id", randomUserID);
     currentUser["user"] = users[randomUserID];
  } else {
-    res.send("400 Error - EMAIL EXIST");
+    res.send("400 Error - EMAIL ALREADY EXIST");
  }
-  console.log(users);
+ // console.log(users);
   res.redirect("/urls");
 });
 
@@ -143,7 +189,7 @@ app.get("/urls/new", (req, res) => {
 
   let templateVars = { currentUser};
   if (req.session.user_id) {
-  res.render("urls_new", templateVars);
+    res.render("urls_new", templateVars);
   } else {
       res.redirect("/login");
   }
@@ -153,19 +199,33 @@ app.post("/urls", (req, res) => {
   let randomURL = generateRandomString();
   urlDatabase[randomURL] = { "long" : req.body.longURL ,
                              "user_id" : req.session.user_id};
-  console.log(urlDatabase);
-  //res.redirect("http://localhost:8080/urls/" + randomURL);
-  res.redirect("/urls");
+ // console.log(urlDatabase);
+  res.redirect("/urls/" + randomURL);
+  //res.redirect("/urls");
 });
 
 
 
 // Show updated URL screen
 app.get("/urls/:id", (req, res) => {
-  let templateVars = { shortURL : req.params.id,
+
+
+  if(req.session.isPopulated){
+    if (urlDifferentUser(req.params.id, req.session.user_id)) {
+        res.send("THE REQUESTED URL BELONGS TO A DIFFERENT USER");
+        res.redirect("/urls");
+    } else if (urlExist(req.params.id)){
+      let templateVars = { shortURL : req.params.id,
                        longURL :  urlDatabase[req.params.id].long,
                        username : req.session.user_id};
-  res.render("urls_show", templateVars);
+      res.render("urls_show", templateVars);
+    } else {
+      res.send("THAT URL DOES NOT EXIST");
+      //res.redirect("/urls");
+    }
+  }else {
+    res.send("YOU ARE NOT LOGGED IN. PLEASE LOG IN TO VIEW URLS");
+  }
 });
 
 //updates an URL
@@ -173,46 +233,60 @@ app.post("/urls/:id", (req, res) => {
 
  if (req.session.user_id) {
    urlDatabase[req.params.id].long = req.body.longURL;
-   console.log(urlDatabase[req.params.id]);
-   console.log(req.body.longURL);
- }
    res.redirect("/urls");
+ } else {
+   res.send("Please log in");
+ }
 });
 
 //Prints out the complete list of URLs
 app.get("/urls", (req, res) => {
-  let templateVars = { urls : urlsForUser(req.session.user_id),
-                       currentUser};
-  console.log(templateVars)
-  res.render("urls_index", templateVars);
+
+  //console.log(templateVars)
+  if (req.session.isPopulated){
+    let templateVars = { urls : urlsForUser(req.session.user_id),
+                         currentUser};
+    res.render("urls_index", templateVars);
+  } else {
+    //res.send("NOT LOGGED IN. PLEASE LOGIN OR REGISTER");
+     //res.render("urls_index", templateVars);
+      res.render("urls_index", {urls : undefined,
+                                currentUser : false});
+
+  }
 });
 
 
 //Deletes a short and long URL
 app.post("/urls/:id/delete", (req, res) => {
-  if (req.session.user_id) {
-    console.log("ready to delete" , req.params.id);
-    console.log(urlDatabase[req.params.id]);
+  if (req.session.isPopulated) {
+   // console.log("ready to delete" , req.params.id);
+   // console.log(urlDatabase[req.params.id]);
     delete urlDatabase[req.params.id];
+    res.redirect("/urls");
   } else {
-  res.redirect("/login");
+      res.send("PLEASE LOGIN TO DELETE URL");
   }
-  res.redirect("/urls");
 });
 
 
-app.post("/urls/:id", (req, res) => {  //console.log(req.params.id);
-  urlDatabase[req.params.id] = req.body.longURL;//let longURL = urlDatabase[req.params.shortURL];
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
   res.redirect("/urls");
 });
 
 
 app.get("/u/:shortURL", (req, res) => {
-   let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+
+  console.log(req.params.shortURL);
+
+  if(urlExist(req.params.shortURL)){
+    let longURL = urlDatabase[req.params.shortURL].long;
+    res.redirect(longURL);
+  } else {
+    res.send("That URL DOES NOT EXIST")
+  }
 });
-
-
 
 
 app.get("/register", (req, res) => {
@@ -225,16 +299,14 @@ app.get("/login", (req, res) => {
 
 
 app.get("/", (req, res) => {
-  res.send("Hello. Welcome to TinyApp");
+  if (req.session.isPopulated){
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login")
+  }
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

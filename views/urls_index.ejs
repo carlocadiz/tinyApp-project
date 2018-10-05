@@ -9,16 +9,17 @@
 </header>
 
 <body>
+     <% if(urls){ %>
 
-    <% for (var url in urls) { %>
-    <center> <h3><%= `${url} ---> ${urls[url].long} ` %> </h3></center>
+      <% for (var url in urls) { %>
+      <p style="display: inline-block;"> <center> <h3><%= `${url} ---> ${urls[url].long} ` %> </h3></center>
 
-     <div style= "display:inline";><form action="/urls/<%= url %>">
-    <center> <button type="submit">EDIT</button></form></center>
+     <form action="/urls/<%= url %>">
+     <center> <button type="submit">EDIT</button></form></center>
      <form method="POST" action="/urls/<%=url%>/delete">
-    <center> <button type="submit">DELETE </button></form></div></center>
+    <center> <button type="submit">DELETE </button></form></center>
     <% }; %>
-
+ <% } %>
 <!--<p><a href="#">SHORTEN NEW URL</a></p>-->
 <P>&nbsp;<P>
 <form method="GET" action= "/urls/new" >

@@ -7,11 +7,20 @@
 
 
 
+         <% if(currentUser){ %>
+
+
            <form action="/logout" method= "POST">
            <input  placeholder= "<%= currentUser.user.email %>"" style="width: 150px">
            <input type="submit" value="Logout">
            </form>
+     <% } else{ %>
+           <form action="/login">
+           <center> <button type="submit">LOGIN</button></form></center>
+           <form action="/register">
+           <center> <button type="submit"> REGISTER </button></form></center>
 
+  <% } %>
 
     </div>
 
