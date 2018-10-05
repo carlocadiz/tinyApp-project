@@ -4,9 +4,15 @@ var PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-var cookieParser = require('cookie-parser')
-app.use(cookieParser())
+var cookieSession = require('cookie-session')
+app.use(cookieSession({
+  name: 'session',
+  secret: "purple-monkey-dinosaur"
+}))
 
+const bcrypt = require('bcrypt');
+const password = "purple-monkey-dinosaur"; // you will probably this from req.params
+const hashedPassword = bcrypt.hashSync(password, 10);
 
 
 app.set("view engine", "ejs");
@@ -79,9 +85,10 @@ app.post("/login", (req, res) => {
   for (let element in users){
     if (users[element].email === req.body.email){
       emailExist = true;
-      if (users[element].password === req.body.password){
+     // if (users[element].password === req.body.password){
+      if (bcrypt.compareSync(req.body.password, users[element].password)){
         passwordExist = true;
-        res.cookie("user_id", users[element].id);
+        req.session.user_id = users[element].id;
         currentUser["user"] = users[element];
       }
     }
@@ -95,7 +102,7 @@ app.post("/login", (req, res) => {
 // logout
 app.post("/logout", (req, res) => {
 
-  res.clearCookie("user_id");
+  req.session = null;
   currentUser = {};
   res.redirect("/login");
 });
@@ -105,9 +112,10 @@ app.post("/register", (req, res) => {
   let password = req.body.password;
   let email = req.body.email;
   let exist = false;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (password === "" || email === ""){
-    res.send("400 Error");
+    res.send("400 Error - MISSING EMAIL OR PASSWORD");
   }
   for ( let element in users){
     if (users[element].email === email){
@@ -115,11 +123,12 @@ app.post("/register", (req, res) => {
     }
   }
   if (!exist){
-    let randomUserID = generateRandomString(); // users[randomUserID] = randomUserID;
+    let randomUserID = generateRandomString();
     users[randomUserID] = {"id" : randomUserID,
                            "email" : email,
-                           "password" : password};
-    res.cookie("user_id", randomUserID);
+                           "password" : hashedPassword};
+    req.session.user_id = randomUserID;
+   // res.cookie("user_id", randomUserID);
     currentUser["user"] = users[randomUserID];
  } else {
     res.send("400 Error - EMAIL EXIST");
@@ -133,7 +142,7 @@ app.post("/register", (req, res) => {
 app.get("/urls/new", (req, res) => {
 
   let templateVars = { currentUser};
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
   res.render("urls_new", templateVars);
   } else {
       res.redirect("/login");
@@ -143,7 +152,7 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   let randomURL = generateRandomString();
   urlDatabase[randomURL] = { "long" : req.body.longURL ,
-                             "user_id" : req.cookies.user_id};
+                             "user_id" : req.session.user_id};
   console.log(urlDatabase);
   //res.redirect("http://localhost:8080/urls/" + randomURL);
   res.redirect("/urls");
@@ -155,14 +164,14 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL : req.params.id,
                        longURL :  urlDatabase[req.params.id].long,
-                       username : req.cookies.user_id};
+                       username : req.session.user_id};
   res.render("urls_show", templateVars);
 });
 
 //updates an URL
 app.post("/urls/:id", (req, res) => {
 
- if (req.cookies.user_id) {
+ if (req.session.user_id) {
    urlDatabase[req.params.id].long = req.body.longURL;
    console.log(urlDatabase[req.params.id]);
    console.log(req.body.longURL);
@@ -172,7 +181,7 @@ app.post("/urls/:id", (req, res) => {
 
 //Prints out the complete list of URLs
 app.get("/urls", (req, res) => {
-  let templateVars = { urls : urlsForUser(req.cookies.user_id),
+  let templateVars = { urls : urlsForUser(req.session.user_id),
                        currentUser};
   console.log(templateVars)
   res.render("urls_index", templateVars);
@@ -181,7 +190,7 @@ app.get("/urls", (req, res) => {
 
 //Deletes a short and long URL
 app.post("/urls/:id/delete", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     console.log("ready to delete" , req.params.id);
     console.log(urlDatabase[req.params.id]);
     delete urlDatabase[req.params.id];
