@@ -9,12 +9,17 @@
 <body>
 
   <center><h2><%= `Short URL : ${shortURL}` %></h2></center>
-  <center><h2><%= `Long URL  : ${longURL}` %></h2></center>
+
 
   <form method="POST" action="/urls/<%=shortURL%>">
    <center><label for="longURL">Enter updated URL:</label>
     <input id="longURL" type="text" name="longURL" placeholder= "<%=longURL%>"" style="width: 300px">
     <input type="submit" value="Update"></center>
-  </form>
-</body>
+
+    <P>&nbsp;<P>
+  </body>
+  <div>
+           <center> <a href ="/urls"> RETURN TO URL INDEX</a></center>
+
+</div>
 </html>

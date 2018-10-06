@@ -16,7 +16,7 @@ const hashedPassword = bcrypt.hashSync(password, 10);
 
 
 app.set("view engine", "ejs");
-
+/*
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -34,8 +34,9 @@ const users = {
     password: "111"
   }
 }
-
- currentUser = {};
+*/
+ const users = {};
+ var currentUser = {};
 /*
 var urlDatabase = {
  "b2xVn2": "http://www.lighthouselabs.ca",
@@ -50,11 +51,14 @@ var urlDatabase = {
 
                 }
 */
+/*
 var urlDatabase = {
                    "b2Vn2"  : { "long" : "htttp://www.lighthouselabs.ca", "user_id" : "userRandomID"},
                    "9sm5xK" : { "long" : "http://www.google.com", "user_id" : "userRandomID"},
                    "111111" : { "long" : "http://www.reddit.com", "user_id" : "11111"}
 }
+*/
+var urlDatabase = {};
 
 function generateRandomString() {
   let randomURL = "";
@@ -101,29 +105,9 @@ app.post("/login", (req, res) => {
   let emailExist = false;
   let passwordExist =false;
   console.log(req.session.user_id);
-  /*
-  if (!req.session.isPopulated){
-    for (let element in users){
-      if (users[element].email === req.body.email){
-        emailExist = true;
-     // if (users[element].password === req.body.password){
-        if (bcrypt.compareSync(req.body.password, users[element].password)){
-          passwordExist = true;
-          req.session.user_id = users[element].id;
-          currentUser["user"] = users[element];
-        }
-      }
-    }
-    if (!emailExist || !passwordExist){
-      res.send("ERROR: 403");
-    }
-  } else {
-      res.redirect("/urls");
-    };
- */
- if (req.session.isPopulated){
-   res.redirect("/urls");
-  }
+
+
+
 
     for (let element in users){
       if (users[element].email === req.body.email){
@@ -142,6 +126,7 @@ app.post("/login", (req, res) => {
     } else {
       res.redirect("/urls");
     }
+
 
 });
 
@@ -186,9 +171,10 @@ app.post("/register", (req, res) => {
 
 // opens new url to logged users
 app.get("/urls/new", (req, res) => {
-
-  let templateVars = { currentUser};
+  console.log("current user:",currentUser);
+  let templateVars = { user : currentUser};
   if (req.session.user_id) {
+    console.log("going to render urls new");
     res.render("urls_new", templateVars);
   } else {
       res.redirect("/login");
@@ -200,6 +186,8 @@ app.post("/urls", (req, res) => {
   urlDatabase[randomURL] = { "long" : req.body.longURL ,
                              "user_id" : req.session.user_id};
  // console.log(urlDatabase);
+
+  console.log(" in post/urls created userid and updated database, going to get urls/:id");
   res.redirect("/urls/" + randomURL);
   //res.redirect("/urls");
 });
@@ -215,9 +203,12 @@ app.get("/urls/:id", (req, res) => {
         res.send("THE REQUESTED URL BELONGS TO A DIFFERENT USER");
         res.redirect("/urls");
     } else if (urlExist(req.params.id)){
+      console.log("i am in get:urls:id");
       let templateVars = { shortURL : req.params.id,
                        longURL :  urlDatabase[req.params.id].long,
-                       username : req.session.user_id};
+                       username : req.session.user_id,
+                       user : currentUser};
+      console.log("i am in urls show")
       res.render("urls_show", templateVars);
     } else {
       res.send("THAT URL DOES NOT EXIST");
@@ -245,13 +236,11 @@ app.get("/urls", (req, res) => {
   //console.log(templateVars)
   if (req.session.isPopulated){
     let templateVars = { urls : urlsForUser(req.session.user_id),
-                         currentUser};
+                         user : currentUser};
     res.render("urls_index", templateVars);
   } else {
-    //res.send("NOT LOGGED IN. PLEASE LOGIN OR REGISTER");
-     //res.render("urls_index", templateVars);
       res.render("urls_index", {urls : undefined,
-                                currentUser : false});
+                                user : false});
 
   }
 });
@@ -260,8 +249,6 @@ app.get("/urls", (req, res) => {
 //Deletes a short and long URL
 app.post("/urls/:id/delete", (req, res) => {
   if (req.session.isPopulated) {
-   // console.log("ready to delete" , req.params.id);
-   // console.log(urlDatabase[req.params.id]);
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
   } else {
@@ -278,23 +265,31 @@ app.post("/urls/:id", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
 
-  console.log(req.params.shortURL);
 
   if(urlExist(req.params.shortURL)){
     let longURL = urlDatabase[req.params.shortURL].long;
     res.redirect(longURL);
   } else {
-    res.send("That URL DOES NOT EXIST")
+      res.send("That URL DOES NOT EXIST")
   }
 });
 
 
 app.get("/register", (req, res) => {
-  res.render("register");
+  if (req.session.isPopulated){
+    res.redirect("/urls");
+  } else {
+      res.render("register");
+  }
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  if (req.session.isPopulated){
+    res.redirect("/urls");
+  } else {
+    res.render("login")
+  }
+
 });
 
 
