@@ -69,15 +69,20 @@ function generateRandomString() {
 function urlsForUser(userID){
   var urlList = {};
   //console.log(userID);
-
-  for (let element in urlDatabase){
-  //  console.log(element);
-    if (urlDatabase[element].user_id === userID){
-      urlList[element] = {"long" : urlDatabase[element].long,
-                          "user_id": urlDatabase[element].long}
+  if (userID){
+    for (let element in urlDatabase){
+    //  console.log(element);
+      if (urlDatabase[element].user_id === userID){
+        urlList[element] = {"long" : urlDatabase[element].long,
+                            "user_id": urlDatabase[element].long}
+       }
      }
-   }
      return urlList;
+   } else {
+       urlList = urlDatabase;
+       return urlList;
+   }
+
 }
 
 function urlExist(shortURL){
@@ -162,7 +167,7 @@ app.post("/register", (req, res) => {
    // res.cookie("user_id", randomUserID);
     currentUser["user"] = users[randomUserID];
  } else {
-    res.send("400 Error - EMAIL ALREADY EXIST");
+    res.send("400 Error - EMAIL ALREADY EXIST OR PASSWORD INCORRECT");
  }
  // console.log(users);
   res.redirect("/urls");
@@ -215,7 +220,7 @@ app.get("/urls/:id", (req, res) => {
       //res.redirect("/urls");
     }
   }else {
-    res.send("YOU ARE NOT LOGGED IN. PLEASE LOG IN TO VIEW URLS");
+    res.send("YOU ARE NOT LOGGED IN. PLEASE LOG IN TO EDIT URLS");
   }
 });
 
@@ -239,7 +244,7 @@ app.get("/urls", (req, res) => {
                          user : currentUser};
     res.render("urls_index", templateVars);
   } else {
-      res.render("urls_index", {urls : undefined,
+      res.render("urls_index", {urls : urlsForUser(null),
                                 user : false});
 
   }
