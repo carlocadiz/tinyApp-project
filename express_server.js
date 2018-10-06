@@ -67,7 +67,8 @@ function generateRandomString() {
 }
 
 function urlsForUser(userID){
-  var urlList = {};
+  let urlList = {};
+
   //console.log(userID);
   if (userID){
     for (let element in urlDatabase){
@@ -244,7 +245,7 @@ app.get("/urls", (req, res) => {
                          user : currentUser};
     res.render("urls_index", templateVars);
   } else {
-      res.render("urls_index", {urls : urlsForUser(null),
+      res.render("urls_index", {urls : urlDatabase,
                                 user : false});
 
   }
@@ -311,3 +312,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+//<p style="display: inline-block;"> <center> <h3><%= ${url} %> </h3> <p> ---> </p><h3><%=`(${urls[url].long}) ` %> </h3></center>
+//  <!--    <center> <h3><%= ${url} %> </h3><h3><%=`(${urls[url].long}) ` %> </h3></center> -->
+ //<center> <h3><%= `${url} ----- ( ${urls[url].long} )` %> </h3></center>
