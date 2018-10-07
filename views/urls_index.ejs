@@ -9,18 +9,18 @@
 </header>
 
 <body>
-     <% if(urls){ %>
+
 
       <% for (var url in urls) { %>
       <p></p>
        <center><span><a href= <%=`${urls[url].long}`%>><%=` ${url} `%></a><%=`----- (${urls[url].long}) ` %></center></span>
-
+<% if(user){ %>
     <form action="/urls/<%= url %>">
      <center> <button type="submit">EDIT</button></center></form>
 
      <form method="POST" action="/urls/<%=url%>/delete">
     <center> <button type="submit">DELETE </button></</center></form>
-    <% }; %>
+<% }; %>
  <% } %>
 <!--<p><a href="#">SHORTEN NEW URL</a></p>-->
 <P>&nbsp;<P>

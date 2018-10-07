@@ -1,3 +1,5 @@
+// Dependancies and middleware activation
+
 var express = require("express");
 var app = express();
 var PORT = 8080; // default port 8080
@@ -16,48 +18,10 @@ const hashedPassword = bcrypt.hashSync(password, 10);
 
 
 app.set("view engine", "ejs");
-/*
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  },
-  "11111" : {
-    id: "11111",
-    email: "carlocadiz@yahoo.com",
-    password: "111"
-  }
-}
-*/
- const users = {};
- var currentUser = {};
-/*
-var urlDatabase = {
- "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-  "111111" : "http//wwww/this.is.me"
-};
-/*
-var urlDatabase = {
-                   "userRandomID" :  [{ "short" : "b2xVn2"  , "long" : "www.lighthouselabs.ca"},
-                                     { "short" : "9sm5xK"  , "long" : "http://www.google.com"}],
-                   "user2RandomID" : [{ "short" : "111111"  , "long" : "http//www.reddit.com"}]
 
-                }
-*/
-/*
-var urlDatabase = {
-                   "b2Vn2"  : { "long" : "htttp://www.lighthouselabs.ca", "user_id" : "userRandomID"},
-                   "9sm5xK" : { "long" : "http://www.google.com", "user_id" : "userRandomID"},
-                   "111111" : { "long" : "http://www.reddit.com", "user_id" : "11111"}
-}
-*/
+// database declaratons, currentUser stores the user information of the currently logged in user
+const users = {};
+var currentUser = {};
 var urlDatabase = {};
 
 function generateRandomString() {
@@ -67,9 +31,8 @@ function generateRandomString() {
 }
 
 function urlsForUser(userID){
-  let urlList = {};
 
-  //console.log(userID);
+  let urlList = {};
   if (userID){
     for (let element in urlDatabase){
     //  console.log(element);
@@ -86,6 +49,7 @@ function urlsForUser(userID){
 
 }
 
+// Verifies if a url exists in the database dependent on short url code.
 function urlExist(shortURL){
     for (let element in urlDatabase){
       if (shortURL === element){
@@ -95,6 +59,7 @@ function urlExist(shortURL){
    return false;
   }
 
+// Verifies is the short url belongs to a different based on the parameter userID
 function urlDifferentUser(shortURL, userID){
   for (let element in urlDatabase){
       if (shortURL === element && urlDatabase[element].user_id !== userID){
@@ -106,20 +71,16 @@ function urlDifferentUser(shortURL, userID){
 
 
 
-// Login
+// Login method.  Will check if the email received from login form exists in the user database. If email does
+// exist, the encryped password is compared to the provided password. If successful, a cookie session is created.
+// If password or email is not correct, a 403 error message is provided.
 app.post("/login", (req, res) => {
   let emailExist = false;
   let passwordExist =false;
-  console.log(req.session.user_id);
-
-
-
 
     for (let element in users){
       if (users[element].email === req.body.email){
         emailExist = true;
-     // if (users[element].password === req.body.password){
-
         if (bcrypt.compareSync(req.body.password, users[element].password)){
           passwordExist = true;
           req.session.user_id = users[element].id;
@@ -132,18 +93,21 @@ app.post("/login", (req, res) => {
     } else {
       res.redirect("/urls");
     }
-
-
 });
 
-// logout
+// Logout handler. When logout is submitted, the cookie session is deleted, the currentUSer is set to blank object
+// and redirect is sent to /url.
 app.post("/logout", (req, res) => {
 
   req.session = null;
   currentUser = {};
-  res.redirect("/login");
+  res.redirect("/urls");
 });
 
+// Register handler. When a new user is registered, verification is performed to ensure email and password are enetered.
+// Verificaton is also performed to ensure if email already exist or password is incorrect.
+// When verified, hashed password is created through bcrypt middleware and a random user id is generated.
+// The user database is updated.
 
 app.post("/register", (req, res) => {
   let password = req.body.password;
@@ -165,67 +129,59 @@ app.post("/register", (req, res) => {
                            "email" : email,
                            "password" : hashedPassword};
     req.session.user_id = randomUserID;
-   // res.cookie("user_id", randomUserID);
     currentUser["user"] = users[randomUserID];
  } else {
     res.send("400 Error - EMAIL ALREADY EXIST OR PASSWORD INCORRECT");
  }
- // console.log(users);
   res.redirect("/urls");
 });
 
 
-// opens new url to logged users
+// New url screen is rendered for logged in users. Non logged users are redirected to login screen.
 app.get("/urls/new", (req, res) => {
-  console.log("current user:",currentUser);
   let templateVars = { user : currentUser};
-  if (req.session.user_id) {
-    console.log("going to render urls new");
+  if (req.session.isPopulated) {
     res.render("urls_new", templateVars);
   } else {
       res.redirect("/login");
   }
 });
-//Creates a new random short URL
+
+// When a new url is sent, a random short url is generated, and url database is updated with short URL, long URL
+// and user ID information.
+
 app.post("/urls", (req, res) => {
   let randomURL = generateRandomString();
   urlDatabase[randomURL] = { "long" : req.body.longURL ,
                              "user_id" : req.session.user_id};
- // console.log(urlDatabase);
-
-  console.log(" in post/urls created userid and updated database, going to get urls/:id");
   res.redirect("/urls/" + randomURL);
-  //res.redirect("/urls");
 });
 
-
-
-// Show updated URL screen
+// An individual short URl is dispayed to logged in users. Inforamtion including current short URL and corresponding
+// long URL along with current user information is rendered to ejs files. Verification is performed to ensure a logged
+// user cannot access the URL's of another user or a non existant URL. If no user is logged on, a message is sent.
 app.get("/urls/:id", (req, res) => {
-
 
   if(req.session.isPopulated){
     if (urlDifferentUser(req.params.id, req.session.user_id)) {
         res.send("THE REQUESTED URL BELONGS TO A DIFFERENT USER");
         res.redirect("/urls");
     } else if (urlExist(req.params.id)){
-      console.log("i am in get:urls:id");
       let templateVars = { shortURL : req.params.id,
                        longURL :  urlDatabase[req.params.id].long,
                        username : req.session.user_id,
                        user : currentUser};
-      console.log("i am in urls show")
       res.render("urls_show", templateVars);
     } else {
       res.send("THAT URL DOES NOT EXIST");
-      //res.redirect("/urls");
     }
   }else {
     res.send("YOU ARE NOT LOGGED IN. PLEASE LOG IN TO EDIT URLS");
   }
 });
 
-//updates an URL
+//Update URL handler. When a request is sent to update an URL, the database is updated to reflect the updated long URL.
+// If user is not logged, they ae redirected to the login form.
 app.post("/urls/:id", (req, res) => {
 
  if (req.session.user_id) {
@@ -235,11 +191,18 @@ app.post("/urls/:id", (req, res) => {
    res.send("Please log in");
  }
 });
+/*
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect("/urls");
+});
+*/
 
-//Prints out the complete list of URLs
+// Display handler. When get /url is called, information for the logged user is retrieved ( for urlsForUser function )
+//from the database and sent to be rendered through ejs files. If no user is logged, the entire listing of short URL's will be diplayed.
+// The current user is set to null.
 app.get("/urls", (req, res) => {
 
-  //console.log(templateVars)
   if (req.session.isPopulated){
     let templateVars = { urls : urlsForUser(req.session.user_id),
                          user : currentUser};
@@ -247,12 +210,11 @@ app.get("/urls", (req, res) => {
   } else {
       res.render("urls_index", {urls : urlDatabase,
                                 user : false});
-
   }
 });
 
-
-//Deletes a short and long URL
+// Delete handler. When a delete request is sent, the record is deleted from the database and redirect is sent
+// to /url screen. If a non logged in user attempts to delete a record, an appropriate message is sent.
 app.post("/urls/:id/delete", (req, res) => {
   if (req.session.isPopulated) {
     delete urlDatabase[req.params.id];
@@ -262,15 +224,9 @@ app.post("/urls/:id/delete", (req, res) => {
   }
 });
 
-
-app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect("/urls");
-});
-
-
+// When a short URL is requested, the corresponding long URL is obtained and redirected to the website.
+// If short URL is not valed, the appropriate message is displayed.
 app.get("/u/:shortURL", (req, res) => {
-
 
   if(urlExist(req.params.shortURL)){
     let longURL = urlDatabase[req.params.shortURL].long;
@@ -280,7 +236,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-
+// Register screen is rendered for non logged in users. Logged in users are redirected to the main URL screeen.
 app.get("/register", (req, res) => {
   if (req.session.isPopulated){
     res.redirect("/urls");
@@ -289,16 +245,17 @@ app.get("/register", (req, res) => {
   }
 });
 
+// Login screen is rendered for non logged in users. Logged in users are redirected to the main URL screen.
 app.get("/login", (req, res) => {
   if (req.session.isPopulated){
     res.redirect("/urls");
   } else {
     res.render("login")
   }
-
 });
 
-
+// Root folder is redirected the main URL screen for logged in users. Non logged useres will be directed the login
+// screen
 app.get("/", (req, res) => {
   if (req.session.isPopulated){
     res.redirect("/urls");
@@ -312,6 +269,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-//<p style="display: inline-block;"> <center> <h3><%= ${url} %> </h3> <p> ---> </p><h3><%=`(${urls[url].long}) ` %> </h3></center>
-//  <!--    <center> <h3><%= ${url} %> </h3><h3><%=`(${urls[url].long}) ` %> </h3></center> -->
- //<center> <h3><%= `${url} ----- ( ${urls[url].long} )` %> </h3></center>
