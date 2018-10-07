@@ -24,29 +24,26 @@ const users = {};
 var currentUser = {};
 var urlDatabase = {};
 
+// Function to return a 6 character random alpha-numeric string. Used to store short URL code and
+// userID token.
 function generateRandomString() {
   let randomURL = "";
   randomURL = Math.random().toString(36).substring(2,8); // console.log(randomURL);
   return randomURL
 }
 
+// Function to return all urls based on user ID parameter
 function urlsForUser(userID){
 
   let urlList = {};
-  if (userID){
-    for (let element in urlDatabase){
-    //  console.log(element);
+
+    for (let element in urlDatabase){    //  console.log(element);
       if (urlDatabase[element].user_id === userID){
         urlList[element] = {"long" : urlDatabase[element].long,
                             "user_id": urlDatabase[element].long}
        }
      }
      return urlList;
-   } else {
-       urlList = urlDatabase;
-       return urlList;
-   }
-
 }
 
 // Verifies if a url exists in the database dependent on short url code.
@@ -132,6 +129,7 @@ app.post("/register", (req, res) => {
     currentUser["user"] = users[randomUserID];
  } else {
     res.send("400 Error - EMAIL ALREADY EXIST OR PASSWORD INCORRECT");
+    res.redirect("back");
  }
   res.redirect("/urls");
 });
@@ -191,12 +189,7 @@ app.post("/urls/:id", (req, res) => {
    res.send("Please log in");
  }
 });
-/*
-app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect("/urls");
-});
-*/
+
 
 // Display handler. When get /url is called, information for the logged user is retrieved ( for urlsForUser function )
 //from the database and sent to be rendered through ejs files. If no user is logged, the entire listing of short URL's will be diplayed.
