@@ -41,8 +41,8 @@ function urlsForUser(userID){
       if (urlDatabase[element].user_id === userID){
         urlList[element] = {"long" : urlDatabase[element].long,
                             "user_id": urlDatabase[element].long}
-       }
-     }
+       };
+     };
      return urlList;
 }
 
@@ -51,8 +51,8 @@ function urlExist(shortURL){
     for (let element in urlDatabase){
       if (shortURL === element){
         return true;
-      }
-    }
+      };
+    };
    return false;
   }
 
@@ -61,8 +61,8 @@ function urlDifferentUser(shortURL, userID){
   for (let element in urlDatabase){
       if (shortURL === element && urlDatabase[element].user_id !== userID){
         return true;
-      }
-    }
+      };
+    };
    return false;
 }
 
@@ -82,14 +82,14 @@ app.post("/login", (req, res) => {
           passwordExist = true;
           req.session.user_id = users[element].id;
           currentUser["user"] = users[element];
-        }
-      }
-    }
+        };
+      };
+    };
     if (!emailExist || !passwordExist){
       res.send("ERROR: 403");
     } else {
       res.redirect("/urls");
-    }
+    };
 });
 
 // Logout handler. When logout is submitted, the cookie session is deleted, the currentUSer is set to blank object
@@ -111,27 +111,28 @@ app.post("/register", (req, res) => {
   let email = req.body.email;
   let exist = false;
   let hashedPassword = bcrypt.hashSync(password, 10);
-
-  if (password === "" || email === ""){
-    res.send("400 Error - MISSING EMAIL OR PASSWORD");
-  }
-  for ( let element in users){
-    if (users[element].email === email){
-      exist = true;
-    }
-  }
-  if (!exist){
-    let randomUserID = generateRandomString();
-    users[randomUserID] = {"id" : randomUserID,
+ if (password === ""){
+    res.send("400 ERROR - MISSING PASSWORD")
+  } else if ( email === ""){
+    res.send("400 ERROR - MISSING EMAIL");
+  } else {
+    for ( let element in users){
+      if (users[element].email === email){
+        exist = true;
+      };
+    };
+    if (!exist){
+      let randomUserID = generateRandomString();
+      users[randomUserID] = {"id" : randomUserID,
                            "email" : email,
                            "password" : hashedPassword};
-    req.session.user_id = randomUserID;
-    currentUser["user"] = users[randomUserID];
- } else {
-    res.send("400 Error - EMAIL ALREADY EXIST OR PASSWORD INCORRECT");
-    res.redirect("back");
- }
-  res.redirect("/urls");
+      req.session.user_id = randomUserID;
+      currentUser["user"] = users[randomUserID];
+    } else {
+      res.send("400 Error - EMAIL ALREADY EXIST");
+   };
+    res.redirect("/urls");
+  };
 });
 
 
@@ -142,7 +143,7 @@ app.get("/urls/new", (req, res) => {
     res.render("urls_new", templateVars);
   } else {
       res.redirect("/login");
-  }
+  };
 });
 
 // When a new url is sent, a random short url is generated, and url database is updated with short URL, long URL
@@ -167,7 +168,6 @@ app.get("/urls/:id", (req, res) => {
     } else if (urlExist(req.params.id)){
       let templateVars = { shortURL : req.params.id,
                        longURL :  urlDatabase[req.params.id].long,
-                       username : req.session.user_id,
                        user : currentUser};
       res.render("urls_show", templateVars);
     } else {
@@ -203,7 +203,7 @@ app.get("/urls", (req, res) => {
   } else {
       res.render("urls_index", {urls : urlDatabase,
                                 user : false});
-  }
+  };
 });
 
 // Delete handler. When a delete request is sent, the record is deleted from the database and redirect is sent
